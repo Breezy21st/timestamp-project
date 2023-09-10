@@ -24,9 +24,24 @@ app.get("/api/hello", function (req, res) {
   res.json({greeting: 'hello API'});
 });
 
-
 app.get('/api/:date?', (req, res) => {
   const { date } = req.params;
+
+  // Check if the date parameter is undefined or empty
+  if (!date) {
+    const currentTime = new Date();
+    return res.json({ unix: currentTime.getTime(), utc: currentTime.toUTCString() });
+  }
+
+  // Attempt to parse the date string using the built-in Date object
+  const dateObject = new Date(date);
+
+  // Check if the parsed date is valid
+  if (!isNaN(dateObject.getTime())) {
+    const unixTimestamp = dateObject.getTime(); // Get timestamp in milliseconds
+    const utcString = dateObject.toUTCString(); // Format as UTC string
+    return res.json({ unix: unixTimestamp, utc: utcString });
+  }
 
   // Check if the request is for a Unix timestamp (numeric) or a date string
   if (!isNaN(date)) {
@@ -35,7 +50,7 @@ app.get('/api/:date?', (req, res) => {
     const dateObject = new Date(unixTimestamp);
 
     if (!isNaN(dateObject.getTime())) {
-      const utcString = dateObject.toUTCString();
+      const utcString = dateObject.toUTCString(); // Format as UTC string
       return res.json({ unix: unixTimestamp, utc: utcString });
     }
   } else {
@@ -51,7 +66,7 @@ app.get('/api/:date?', (req, res) => {
       const dateObject = new Date(year, month, day);
       if (!isNaN(dateObject.getTime())) {
         const unixTimestamp = dateObject.getTime(); // Get timestamp in milliseconds
-        const utcString = dateObject.toUTCString();
+        const utcString = dateObject.toUTCString(); // Format as UTC string
         return res.json({ unix: unixTimestamp, utc: utcString });
       }
     }
@@ -60,11 +75,6 @@ app.get('/api/:date?', (req, res) => {
   // If neither Unix timestamp nor valid date string, return an error
   return res.json({ error: 'Invalid Date' });
 });
-
-
-
-
-
 
 
 
