@@ -24,49 +24,49 @@ app.get("/api/hello", function (req, res) {
   res.json({greeting: 'hello API'});
 });
 
-// Define a route for /api/:timestamp
-app.get('/api/:timestamp', (req, res) => {
-  const { timestamp } = req.params;
 
-  // Parse the timestamp as an integer
-  const unixTimestamp = parseInt(timestamp);
-
-  // Check if the parsed timestamp is a valid number
-  if (isNaN(unixTimestamp)) {
-    return res.json({ error: 'Invalid Unix Timestamp' });
-  }
-
-  // Convert Unix timestamp to a Date object
-  const dateObject = new Date(unixTimestamp);
-
-  // Check if the date is valid
-  if (!isNaN(dateObject.getTime())) {
-    return res.json({ unix: unixTimestamp, utc: dateObject.toUTCString() });
-  } else {
-    return res.json({ error: 'Invalid Date' });
-  }
-});
-
-// Define a route for /api/:date?
 app.get('/api/:date?', (req, res) => {
   const { date } = req.params;
 
-  // Handle empty date parameter (current time)
-  if (!date) {
-    const currentTime = new Date();
-    return res.json({ unix: currentTime.getTime(), utc: currentTime.toUTCString() });
-  }
+  // Check if the request is for a Unix timestamp (numeric) or a date string
+  if (!isNaN(date)) {
+    // Handle Unix timestamp request
+    const unixTimestamp = parseInt(date);
+    const dateObject = new Date(unixTimestamp);
 
-  // Parse the date string using date-fns
-  const dateObject = parseISO(date);
-
-  // Check if the date is valid
-  if (isValid(dateObject)) {
-    return res.json({ unix: dateObject.getTime(), utc: dateObject.toUTCString() });
+    if (!isNaN(dateObject.getTime())) {
+      const utcString = dateObject.toUTCString();
+      return res.json({ unix: unixTimestamp, utc: utcString });
+    }
   } else {
-    return res.json({ error: 'Invalid Date' });
+    // Handle date string request
+    // Attempt to parse the date string in the format "YYYY-MM-DD"
+    const dateParts = date.split('-');
+    if (dateParts.length === 3) {
+      const year = parseInt(dateParts[0]);
+      const month = parseInt(dateParts[1]) - 1; // Months are 0-based (0-11)
+      const day = parseInt(dateParts[2]);
+
+      // Check if the parsed date is valid
+      const dateObject = new Date(year, month, day);
+      if (!isNaN(dateObject.getTime())) {
+        const unixTimestamp = dateObject.getTime(); // Get timestamp in milliseconds
+        const utcString = dateObject.toUTCString();
+        return res.json({ unix: unixTimestamp, utc: utcString });
+      }
+    }
   }
+
+  // If neither Unix timestamp nor valid date string, return an error
+  return res.json({ error: 'Invalid Date' });
 });
+
+
+
+
+
+
+
 
 
 
